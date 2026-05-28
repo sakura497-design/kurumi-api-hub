@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刻刻帝 — API 开放平台导航</title>
+<!-- Preload critical above-fold images -->
+<link rel="preload" as="image" href="assets/images/avatar.png" fetchpriority="high">
+<link rel="preload" as="image" href="assets/images/bg.webp" fetchpriority="high">
+<style>
+/* ═══════════════════════════════════════════
+   时崎狂三 角色视觉分析 & 配色提炼
+   ═══════════════════════════════════════════
+   发色：黑色，双马尾
+   瞳色：左眼红色（时钟瞳），右眼琥珀/金色
+   代表元素：时钟、齿轮、蔷薇、哥特蕾丝
+   灵装：神威灵装·三番 — 黑色哥特洛丽塔裙
+   标志道具：刻刻帝（巨大时钟）、短火枪
+   主色调：黑 / 深红 / 金色
+
+   配色方案：
+     主背景色    #0b0810  深紫黑
+     强调色-红   #a81c2e  深蔷薇红
+     强调色-金   #c9a35a  复古金
+     文字主色    #e4d5b7  暖象牙
+     文字副色    #8a7b6b  灰褐
+     卡片底色    rgba(18,12,22,0.65)  半透明深紫黑
+     卡片边框    rgba(168,28,46,0.3)  暗红
+     发光色      rgba(201,163,90,0.6)  金光
+   ═══════════════════════════════════════════ */
+
+/* Fonts loaded async via JS below to avoid render-blocking */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* Mobile: no blue highlight on tap */
+*, *:active, *:focus { -webkit-tap-highlight-color: transparent; outline: none; }
+*:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+:root {
+  --bg-deep: #0b0810;
+  --crimson: #a81c2e;
+  --crimson-light: #d43048;
+  --gold: #c9a35a;
+  --gold-bright: #e8c88a;
+  --gold-pale: #f0dbb0;
+  --text-main: #e4d5b7;
+  --text-dim: #8a7b6b;
+  --card-bg: rgba(18,12,22,0.65);
+  --card-border: rgba(168,28,46,0.25);
+  --glow-gold: rgba(201,163,90,0.5);
+  --glow-red: rgba(168,28,46,0.4);
+  --radius: 20px;
+  --transition: 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Serif SC', Georgia, 'Times New Roman', serif;
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+  background: var(--bg-deep);
+}
+
+/* ═══ Fullscreen background image + overlay ═══ */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url('assets/images/bg.webp') center/cover no-repeat;
+}
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(168,28,46,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 30%, rgba(201,163,90,0.08) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(11,8,16,0.92) 0%, rgba(11,8,16,0.85) 50%, rgba(11,8,16,0.95) 100%);
+  pointer-events: none;
+}
+
+/* ═══ Full-page rose petals ═══ */
+.rose-petals {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+.rose-petal {
+  position: absolute;
+  top: -40px;
+  opacity: 0;
+  animation: petalFall linear infinite;
+  will-change: transform, opacity;
+}
+@keyframes petalFall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) rotate(0deg) scale(0.8);
+  }
+  8% {
+    opacity: 0.8;
+    transform: translateY(5vh) translateX(15px) rotate(45deg) scale(1);
+  }
+  25% {
+    opacity: 0.6;
+    transform: translateY(25vh) translateX(-20px) rotate(135deg) scale(0.95);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(50vh) translateX(25px) rotate(270deg) scale(0.9);
+  }
+  75% {
+    opacity: 0.35;
+    transform: translateY(75vh) translateX(-15px) rotate(405deg) scale(0.85);
+  }
+  92% {
+    opacity: 0.15;
+    transform: translateY(92vh) translateX(10px) rotate(500deg) scale(0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(105vh) translateX(0px) rotate(540deg) scale(0.6);
+  }
+}
+
+/* ═══ Decorative gears (pure CSS) ═══ */
+.gears {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.gear {
+  position: absolute;
+  border-radius: 50%;
+  animation: gearSpin linear infinite;
+}
+/* tooth-like effect with box-shadow */
+.gear::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(201,163,90,0.06);
+}
+.gear::after {
+  content: "";
+  position: absolute;
+  inset: 25%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(168,28,46,0.05);
+}
+.gear-1 {
+  width: 260px; height: 260px;
+  top: -60px; left: -50px;
+  border: 2px solid rgba(201,163,90,0.05);
+  animation-duration: 80s;
+}
+.gear-2 {
+  width: 180px; height: 180px;
+  bottom: 10%; right: -30px;
+  border: 2px solid rgba(168,28,46,0.05);
+  animation-duration: 60s;
+  animation-direction: reverse;
+}
+.gear-3 {
+  width: 140px; height: 140px;
+  top: 45%; left: 55%;
+  border: 1.5px dashed rgba(201,163,90,0.04);
+  animation-duration: 100s;
+}
+.gear-4 {
+  width: 220px; height: 220px;
+  top: 20%; right: 15%;
+  border: 2px solid rgba(168,28,46,0.04);
+  animation-duration: 90s;
+  animation-direction: reverse;
+}
+@keyframes gearSpin { to { transform: rotate(360deg); } }
+
+/* ═══ Floating gold particles ═══ */
+.particles-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.gold-particle {
+  position: absolute;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  animation: particleDrift ease-in-out infinite;
+}
+@keyframes particleDrift {
+  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+  30%  { opacity: 0.6; }
+  70%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translateY(-120px) scale(0); }
+}
+
+/* ═══ Scrollbar ═══ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: rgba(168,28,46,0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168,28,46,0.5); }
+::selection { background: rgba(168,28,46,0.4); color: var(--gold-bright); }
+
+/* ═══ Header ═══ */
+.header {
+  position: relative;
+  z-index: 2;
+  padding: 0;
+}
+
+/* ── Top bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid rgba(168,28,46,0.15);
+  backdrop-filter: blur(12px);
+  background: rgba(11,8,16,0.6);
+}
+.topbar-logo {
+  font-family: 'Cinzel', 'Noto Serif SC', serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-shadow: 0 0 16px rgba(201,163,90,0.3);
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-logo .logo-ring {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  animation: logoSpin 20s linear infinite;
+  border: 2px solid rgba(201,163,90,0.4);
+  box-shadow:
+    0 0 12px rgba(168,28,46,0.2),
+    0 0 0 4px rgba(18,12,22,0.6),
+    0 0 0 6px rgba(201,163,90,0.1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.topbar-logo .logo-ring img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.7) brightness(0.85) contrast(1.1);
+  animation: logoCounterSpin 20s linear infinite;
+}
+/* outer glow ring */
+.topbar-logo .logo-ring::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,163,90,0.15);
+  animation: logoGlow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes logoSpin { to { transform: rotate(360deg); } }
+@keyframes logoCounterSpin { to { transform: rotate(-360deg); } }
+@keyframes logoGlow {
+  0%, 100% { box-shadow: 0 0 6px rgba(168,28,46,0.15); opacity: 0.5; }
+  50% { box-shadow: 0 0 16px rgba(201,163,90,0.2); opacity: 1; }
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 20px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.topbar-nav span { cursor: default; }
+
+/* ── Banner ── */
+.banner {
+  display: flex;
+  align-items: stretch;
+  min-height: 320px;
+  position: relative;
+  overflow: hidden;
+}
+.banner-img {
+  flex: 0 0 42%;
+  position: relative;
+  overflow: hidden;
+}
+.banner-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.5) contrast(1.1) saturate(0.8);
+}
+.banner-img::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 40%, var(--bg-deep) 100%);
+}
+.banner-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 48px 48px 32px;
+  position: relative;
+}
+.banner-content h2 {
+  font-family: 'Cinzel', 'Noto Serif SC', serif;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(201,163,90,0.25), 0 2px 4px rgba(0,0,0,0.5);
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+  line-height: 1.3;
+}
+.banner-content h2 em {
+  font-style: normal;
+  color: var(--crimson-light);
+  text-shadow: 0 0 12px var(--glow-red);
+}
+.banner-content p {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  max-width: 440px;
+  line-height: 1.8;
+  letter-spacing: 1px;
+}
+.banner-content .banner-deco {
+  position: absolute;
+  top: 24px; right: 48px;
+  font-size: 4rem;
+  opacity: 0.06;
+  color: var(--gold);
+  animation: gearSpin 40s linear infinite;
+}
+
+/* ── Search row ── */
+.search-row {
+  padding: 20px 32px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(8px);
+  background: rgba(11,8,16,0.4);
+  border-bottom: 1px solid rgba(168,28,46,0.1);
+  position: relative;
+  z-index: 2;
+}
+.search-wrap {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+}
+.search-wrap .si {
+  position: absolute;
+  left: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  opacity: 0.4;
+  pointer-events: none;
+}
+#search {
+  width: 100%;
+  padding: 12px 20px 12px 46px;
+  border: 1.5px solid rgba(168,28,46,0.2);
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 600;
+  background: rgba(18,12,22,0.7);
+  color: var(--text-main);
+  backdrop-filter: blur(8px);
+  outline: none;
+  transition: all 0.35s ease;
+}
+#search:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,163,90,0.12), 0 0 24px rgba(201,163,90,0.08);
+}
+#search::placeholder { color: #5a4d42; font-weight: 600; }
+
+/* ═══ Tabs ═══ */
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 8px 18px;
+  border: 1.5px solid rgba(201,163,90,0.15);
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  background: rgba(18,12,22,0.5);
+  color: var(--text-dim);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition);
+  user-select: none;
+  letter-spacing: 1px;
+}
+.tab:hover {
+  color: var(--gold);
+  border-color: rgba(201,163,90,0.35);
+  background: rgba(168,28,46,0.08);
+}
+.tab.active {
+  background: linear-gradient(135deg, var(--crimson), #4a0a12);
+  color: var(--gold-bright);
+  border-color: var(--crimson);
+  box-shadow: 0 0 14px var(--glow-red), inset 0 1px 0 rgba(255,255,255,0.04);
+  text-shadow: 0 0 8px rgba(232,200,138,0.3);
+}
+
+/* ═══ Grid ═══ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px;
+  position: relative;
+  z-index: 1;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ═══ Card — frosted glass ═══ */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  padding: 24px 22px 20px;
+  border: 1.5px solid var(--card-border);
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 180px;
+}
+/* top accent line */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--crimson), var(--gold), var(--crimson), transparent);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+/* clock gear watermark */
+.card::after {
+  content: "⚙";
+  position: absolute;
+  bottom: -6px; right: -4px;
+  font-size: 5rem;
+  color: rgba(201,163,90,0.03);
+  pointer-events: none;
+  transition: color var(--transition);
+}
+
+/* Roman numeral index */
+.card-roman {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, rgba(201,163,90,0.2) 0%, rgba(168,28,46,0.15) 50%, transparent 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  pointer-events: none;
+  animation: romanPulse 4s ease-in-out infinite;
+  user-select: none;
+}
+@keyframes romanPulse {
+  0%   { opacity: 0.2; filter: blur(0px); }
+  30%  { opacity: 0.6; }
+  50%  { opacity: 0.35; filter: blur(0.5px); }
+  70%  { opacity: 0.55; }
+  100% { opacity: 0.2; filter: blur(0px); }
+}
+/* stagger each card's roman animation */
+.card:nth-child(1) .card-roman  { animation-delay: 0s; }
+.card:nth-child(2) .card-roman  { animation-delay: 0.3s; }
+.card:nth-child(3) .card-roman  { animation-delay: 0.6s; }
+.card:nth-child(4) .card-roman  { animation-delay: 0.9s; }
+.card:nth-child(5) .card-roman  { animation-delay: 1.2s; }
+.card:nth-child(6) .card-roman  { animation-delay: 1.5s; }
+.card:nth-child(7) .card-roman  { animation-delay: 1.8s; }
+.card:nth-child(8) .card-roman  { animation-delay: 2.1s; }
+.card:nth-child(9) .card-roman  { animation-delay: 2.4s; }
+.card:nth-child(10) .card-roman { animation-delay: 2.7s; }
+
+/* brighter on hover */
+.card:hover .card-roman {
+  animation: none;
+  background: linear-gradient(180deg, var(--gold-bright), var(--crimson-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.8;
+  filter: blur(0);
+  transition: all 0.4s ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(201,163,90,0.4);
+  box-shadow:
+    0 8px 36px rgba(0,0,0,0.35),
+    0 0 20px rgba(201,163,90,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.card:hover::before { opacity: 1; }
+.card:hover::after { color: rgba(201,163,90,0.06); }
+
+/* particle burst */
+.card .particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 3;
+}
+.card .particle {
+  position: absolute;
+  font-size: 10px;
+  opacity: 0;
+  pointer-events: none;
+}
+.card:hover .particle {
+  animation: particleFloat 0.7s ease-out forwards;
+}
+@keyframes particleFloat {
+  0% { opacity: 0.7; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0.2); }
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(168,28,46,0.25);
+  box-shadow: 0 0 10px rgba(168,28,46,0.1), inset 0 0 6px rgba(0,0,0,0.3);
+  position: relative;
+}
+.card-icon img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.7) brightness(0.85) contrast(1.1);
+}
+/* mini gear on icon */
+.card-icon::after {
+  content: "";
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 14px; height: 14px;
+  border: 1.5px solid rgba(201,163,90,0.25);
+  border-radius: 50%;
+  background: rgba(11,8,16,0.8);
+  animation: gearSpin 15s linear infinite;
+}
+.card-icon::before {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 8px; height: 8px;
+  border: 1px solid rgba(201,163,90,0.15);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.card-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+.card-desc {
+  font-size: 0.83rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  flex: 1;
+}
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.card-tag {
+  font-size: 0.68rem;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+.card-tag[data-tag="国内"] { background: rgba(168,28,46,0.12); color: #d07070; border-color: rgba(168,28,46,0.25); }
+.card-tag[data-tag="国外"] { background: rgba(201,163,90,0.08); color: #b8a060; border-color: rgba(201,163,90,0.2); }
+.card-tag[data-tag="AI"] { background: rgba(168,28,46,0.08); color: #c08088; border-color: rgba(168,28,46,0.18); }
+.card-tag[data-tag="云服务"] { background: rgba(100,80,60,0.1); color: #a09078; border-color: rgba(100,80,60,0.2); }
+.card-tag[data-tag="平台"] { background: rgba(140,110,60,0.08); color: #b09868; border-color: rgba(140,110,60,0.18); }
+.card-tag[data-tag="支付"] { background: rgba(160,50,50,0.1); color: #c08080; border-color: rgba(160,50,50,0.2); }
+
+.card-link {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  word-break: break-all;
+  opacity: 0.35;
+  transition: opacity var(--transition);
+}
+.card:hover .card-link { opacity: 0.6; }
+
+/* ═══ Empty ═══ */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+  grid-column: 1 / -1;
+}
+.empty-emoji { font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.5; }
+
+/* ═══ Gothic divider ═══ */
+.gothic-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: 500px;
+  margin: 8px auto 0;
+  color: rgba(168,28,46,0.3);
+  font-size: 0.75rem;
+}
+.gothic-divider::before, .gothic-divider::after {
+  content: ""; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(168,28,46,0.25), transparent);
+}
+
+/* ═══ Music player ═══ */
+.music-player {
+  position: fixed;
+  left: 20px;
+  bottom: 24px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(18,12,22,0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(168,28,46,0.2);
+  border-radius: 50px;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.02);
+  cursor: default;
+  transition: all 0.3s ease;
+  animation: fadeUp 0.6s ease both;
+  animation-delay: 0.5s;
+}
+.music-player:hover {
+  border-color: rgba(201,163,90,0.3);
+  box-shadow:
+    0 6px 28px rgba(0,0,0,0.35),
+    0 0 12px rgba(168,28,46,0.06);
+}
+
+/* spinning disc */
+.music-disc {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(201,163,90,0.3);
+  position: relative;
+  box-shadow: 0 0 8px rgba(168,28,46,0.15);
+}
+.music-disc img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.6) brightness(0.8);
+}
+.music-disc.spinning {
+  animation: discSpin 4s linear infinite;
+}
+@keyframes discSpin { to { transform: rotate(360deg); } }
+/* vinyl center dot */
+.music-disc::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 8px; height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+  border: 1px solid rgba(201,163,90,0.3);
+  z-index: 1;
+}
+
+.music-info {
+  min-width: 0;
+  max-width: 120px;
+}
+.music-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+.music-artist {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* controls */
+.music-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.music-btn {
+  width: 30px; height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(168,28,46,0.15);
+  color: var(--gold-bright);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(168,28,46,0.2);
+}
+.music-btn:hover {
+  background: rgba(168,28,46,0.3);
+  border-color: rgba(168,28,46,0.4);
+  transform: scale(1.08);
+}
+.music-btn.play-btn {
+  width: 34px; height: 34px;
+  font-size: 0.85rem;
+  background: linear-gradient(135deg, var(--crimson), #4a0a12);
+  border-color: var(--crimson);
+  box-shadow: 0 0 10px var(--glow-red);
+}
+
+/* progress bar */
+.music-progress {
+  position: absolute;
+  bottom: 0; left: 16px; right: 16px;
+  height: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  z-index: 5;
+}
+.music-progress-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(168,28,46,0.15);
+  border-radius: 2px;
+  position: relative;
+  overflow: visible;
+  transition: height 0.2s ease;
+}
+.music-progress:hover .music-progress-track {
+  height: 5px;
+}
+.music-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--crimson), var(--gold));
+  width: 0%;
+  border-radius: 2px;
+  position: relative;
+}
+/* drag handle */
+.music-progress-bar::after {
+  content: "";
+  position: absolute;
+  right: -5px; top: 50%;
+  width: 10px; height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--gold-bright);
+  border: 2px solid var(--crimson);
+  box-shadow: 0 0 6px rgba(168,28,46,0.3);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.music-progress:hover .music-progress-bar::after {
+  opacity: 1;
+  transform: scale(1);
+}
+/* time tooltip */
+.music-progress-time {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  background: rgba(18,12,22,0.9);
+  border: 1px solid rgba(201,163,90,0.2);
+  border-radius: 4px;
+  font-size: 0.6rem;
+  color: var(--gold-bright);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.2s;
+}
+.music-progress:hover .music-progress-time {
+  opacity: 1;
+}
+
+/* visualizer bars */
+.music-visualizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 20px;
+  margin-left: 4px;
+}
+.vis-bar {
+  width: 3px;
+  background: linear-gradient(180deg, var(--crimson), var(--gold));
+  border-radius: 1px;
+  transition: height 0.15s ease;
+  opacity: 0.6;
+}
+.music-player.playing .vis-bar {
+  animation: visBounce 0.8s ease-in-out infinite;
+}
+@keyframes visBounce {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+.vis-bar:nth-child(2) { animation-delay: 0.1s; }
+.vis-bar:nth-child(3) { animation-delay: 0.2s; }
+.vis-bar:nth-child(4) { animation-delay: 0.3s; }
+.vis-bar:nth-child(5) { animation-delay: 0.15s; }
+
+/* mobile */
+@media (max-width: 640px) {
+  .music-player {
+    left: 12px;
+    bottom: 16px;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .music-info { max-width: 80px; }
+  .music-visualizer { display: none; }
+}
+
+/* ═══ Footer — Sakura artistic ═══ */
+.footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 48px 24px 56px;
+  overflow: hidden;
+}
+.footer-inner {
+  position: relative;
+  display: inline-block;
+  padding: 28px 60px 24px;
+}
+/* glowing border frame */
+.footer-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid transparent;
+  border-image: linear-gradient(135deg, var(--crimson), var(--gold), var(--crimson), var(--gold)) 1;
+  opacity: 0.4;
+  animation: borderShimmer 4s linear infinite;
+  background: linear-gradient(135deg, rgba(168,28,46,0.05), rgba(201,163,90,0.03));
+  background-clip: padding-box;
+}
+@keyframes borderShimmer {
+  0%   { border-image: linear-gradient(0deg, var(--crimson), var(--gold), var(--crimson)) 1; }
+  25%  { border-image: linear-gradient(90deg, var(--gold), var(--crimson), var(--gold)) 1; }
+  50%  { border-image: linear-gradient(180deg, var(--crimson), var(--gold), var(--crimson)) 1; }
+  75%  { border-image: linear-gradient(270deg, var(--gold), var(--crimson), var(--gold)) 1; }
+  100% { border-image: linear-gradient(360deg, var(--crimson), var(--gold), var(--crimson)) 1; }
+}
+
+.footer-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+.footer-name {
+  font-family: 'Cinzel', 'Noto Serif SC', serif;
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, var(--crimson-light), var(--gold-bright), var(--crimson), var(--gold));
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: sakuraGradient 5s ease infinite;
+  position: relative;
+  display: inline-block;
+}
+@keyframes sakuraGradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+/* glow behind text */
+.footer-name::after {
+  content: "制作 By Sakura";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, var(--crimson-light), var(--gold-bright));
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: sakuraGradient 5s ease infinite;
+  filter: blur(12px);
+  opacity: 0.4;
+}
+.footer-sub {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-top: 8px;
+  opacity: 0.5;
+}
+
+/* footer floating particles */
+.footer-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.footer-particle {
+  position: absolute;
+  font-size: 10px;
+  opacity: 0;
+  animation: fpFloat ease-in-out infinite;
+}
+@keyframes fpFloat {
+  0%   { opacity: 0; transform: translateY(20px) rotate(0deg) scale(0.5); }
+  30%  { opacity: 0.7; }
+  70%  { opacity: 0.5; }
+  100% { opacity: 0; transform: translateY(-60px) rotate(360deg) scale(0); }
+}
+
+/* rising sakura petals in footer */
+.footer-petals {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.footer-petal {
+  position: absolute;
+  bottom: -20px;
+  font-size: 12px;
+  opacity: 0;
+  animation: petalRise linear infinite;
+}
+@keyframes petalRise {
+  0%   { opacity: 0; transform: translateY(0) rotate(0deg) translateX(0); }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.3; }
+  100% { opacity: 0; transform: translateY(-120px) rotate(540deg) translateX(40px); }
+}
+
+/* sparkle dots */
+.footer-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sparkle {
+  position: absolute;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  animation: sparkleAnim ease-in-out infinite;
+}
+@keyframes sparkleAnim {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+/* pulse ring */
+.footer-pulse {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 1px solid rgba(168,28,46,0.08);
+  animation: footerPulse 4s ease-out infinite;
+  pointer-events: none;
+}
+.footer-pulse:nth-child(2) { animation-delay: 1.3s; }
+.footer-pulse:nth-child(3) { animation-delay: 2.6s; }
+@keyframes footerPulse {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.3; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+/* ═══ Site stats ═══ */
+.site-stats {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto 32px;
+  padding: 24px 28px;
+  border: 1.5px solid rgba(168,28,46,0.15);
+  border-radius: 18px;
+  background: rgba(18,12,22,0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.stats-title {
+  text-align: center;
+  font-family: 'Cinzel', 'Noto Serif SC', serif;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--gold-bright);
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(201,163,90,0.2);
+}
+.stats-grid {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+}
+.stats-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1.5px solid rgba(168,28,46,0.2);
+  background: radial-gradient(circle at 30% 30%, rgba(168,28,46,0.2), rgba(11,8,16,0.7));
+  box-shadow: 0 0 10px rgba(168,28,46,0.08);
+  animation: statsPulse 3s ease-in-out infinite;
+}
+.stats-item:nth-child(2) .stats-icon { animation-delay: 1s; }
+.stats-item:nth-child(3) .stats-icon { animation-delay: 2s; }
+@keyframes statsPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(168,28,46,0.08); }
+  50% { box-shadow: 0 0 18px rgba(168,28,46,0.15), 0 0 0 2px rgba(201,163,90,0.05); }
+}
+.stats-value {
+  font-family: 'Cinzel', serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-shadow: 0 0 8px rgba(201,163,90,0.2);
+  letter-spacing: 1px;
+  min-height: 1.4em;
+}
+.stats-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+/* ═══ Lace border ═══ */
+.lace-border {
+  height: 10px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.lace-border::after {
+  content: "· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·";
+  display: block;
+  text-align: center;
+  font-size: 0.55rem;
+  color: rgba(168,28,46,0.12);
+  letter-spacing: 3px;
+  line-height: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ═══ Floating pet character sidebar ═══ */
+.pet-container {
+  position: fixed;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  transition: left 8s cubic-bezier(0.25, 0.1, 0.25, 1), top 8s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.pet-character {
+  width: 140px;
+  cursor: pointer;
+  position: relative;
+  z-index: 92;
+  transition: filter 0.3s;
+  animation: petFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.4));
+}
+.pet-character:hover {
+  filter: drop-shadow(0 8px 24px rgba(168,28,46,0.4)) brightness(1.1);
+}
+@keyframes petFloat {
+  0%   { transform: translateY(0) rotate(0deg); }
+  25%  { transform: translateY(-8px) rotate(2deg); }
+  50%  { transform: translateY(-2px) rotate(-1deg); }
+  75%  { transform: translateY(-10px) rotate(1deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* speech bubble */
+.pet-bubble {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  padding: 8px 14px;
+  background: rgba(18,12,22,0.9);
+  border: 1px solid rgba(201,163,90,0.3);
+  border-radius: 14px 14px 4px 14px;
+  font-size: 0.72rem;
+  color: var(--gold-bright);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(8px) scale(0.9);
+  transition: all 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.pet-bubble.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* glow ring under character */
+.pet-glow {
+  width: 100px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(168,28,46,0.2) 0%, transparent 70%);
+  margin-top: -12px;
+  animation: glowPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.4; transform: scaleX(1); }
+  50% { opacity: 0.7; transform: scaleX(1.1); }
+}
+
+/* panel that slides out */
+.pet-panel {
+  position: fixed;
+  right: -320px;
+  bottom: 20px;
+  width: 300px;
+  max-height: 70vh;
+  z-index: 89;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 20px;
+  border: 1.5px solid rgba(168,28,46,0.2);
+  transition: right 0.45s cubic-bezier(0.34, 1.2, 0.64, 1), left 0.45s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.3s;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+}
+.pet-panel.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pet-panel-bg {
+  position: absolute;
+  inset: 0;
+  background: #1a1018 center/cover no-repeat;
+  z-index: -2;
+  border-radius: inherit;
+}
+.pet-panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11,8,16,0.9);
+  z-index: -1;
+  border-radius: inherit;
+}
+.pet-panel-header {
+  padding: 20px 16px 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(168,28,46,0.15);
+  flex-shrink: 0;
+}
+.pet-panel-header h3 {
+  font-family: 'Cinzel', 'Noto Serif SC', serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--gold-bright);
+  text-shadow: 0 0 12px rgba(201,163,90,0.25);
+  letter-spacing: 2px;
+  margin-bottom: 2px;
+}
+.pet-panel-header p {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.pet-panel-list {
+  padding: 8px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pet-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border-radius: 11px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: rgba(18,12,22,0.4);
+  backdrop-filter: blur(4px);
+}
+.pet-panel-item:hover {
+  background: rgba(168,28,46,0.12);
+  border-color: rgba(168,28,46,0.25);
+  transform: translateX(3px);
+}
+.pet-panel-item-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(168,28,46,0.2);
+}
+.pet-panel-item-icon img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.6) brightness(0.8);
+}
+.pet-panel-item-info { flex: 1; min-width: 0; }
+.pet-panel-item-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pet-panel-item-desc {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pet-panel-item-arrow {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.pet-panel-item:hover .pet-panel-item-arrow { opacity: 1; color: var(--gold); }
+
+.pet-panel-footer {
+  padding: 10px 16px;
+  border-top: 1px solid rgba(168,28,46,0.1);
+  text-align: center;
+  flex-shrink: 0;
+}
+.pet-panel-footer small {
+  font-size: 0.6rem;
+  color: #4a3a32;
+  letter-spacing: 0.5px;
+}
+
+/* backdrop */
+.pet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 88;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.pet-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ═══ Entry animation ═══ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card { animation: fadeUp 0.45s ease both; }
+
+/* ═══ Responsive ═══ */
+@media (max-width: 768px) {
+  .banner { flex-direction: column; min-height: auto; }
+  .banner-img { flex: none; height: 200px; }
+  .banner-img::after {
+    background: linear-gradient(180deg, transparent 40%, var(--bg-deep) 100%);
+  }
+  .banner-content { padding: 28px 24px; }
+  .banner-content h2 { font-size: 1.4rem; }
+  .topbar { padding: 12px 16px; }
+  .topbar-nav { display: none; }
+  .search-row { padding: 16px; }
+  .grid { grid-template-columns: 1fr; gap: 14px; }
+  .container { padding: 20px 16px; }
+  .pet-character { width: 100px; }
+  .pet-panel { width: 260px; right: -260px; }
+}
+@media (max-width: 480px) {
+  .banner-content h2 { font-size: 1.2rem; }
+  .banner-content .banner-deco { display: none; }
+}
+
+/* ═══ Mobile: tap delay elimination ═══ */
+a, button, .card, .tab, .pet-character, .music-btn, .pet-panel-item {
+  touch-action: manipulation;
+}
+
+/* ═══ Mobile performance: disable expensive effects ═══ */
+@media (max-width: 768px) {
+  .card, .topbar, .search-row, .music-player, .pet-panel, .site-stats, .pet-panel-item, .tab {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  /* Disable heavy animations */
+  .gears, .particles-bg, .footer-pulse, .footer-sparkles { display: none; }
+  .logo-ring, .logo-ring img { animation: none !important; }
+  .card::after, .card-icon::after, .card-icon::before { display: none; }
+  .stats-icon { animation: none !important; }
+  .footer-name, .footer-name::after { animation: none !important; }
+  .banner-deco { animation: none !important; }
+  /* Slow petals further */
+  .rose-petal { animation-duration: 22s !important; }
+  /* Disable card particles */
+  .card .particles { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-layer"></div>
+<div class="bg-overlay"></div>
+
+<!-- Decorative gears -->
+<div class="gears">
+  <div class="gear gear-1"></div>
+  <div class="gear gear-2"></div>
+  <div class="gear gear-3"></div>
+  <div class="gear gear-4"></div>
+</div>
+
+<!-- Gold particles -->
+<div class="particles-bg" id="particlesBg"></div>
+
+<!-- Rose petals -->
+<div class="rose-petals" id="rosePetals"></div>
+
+<!-- Pet backdrop -->
+<div class="pet-backdrop" id="petBackdrop"></div>
+
+<!-- Music player -->
+<div class="music-player" id="musicPlayer">
+  <div class="music-disc" id="musicDisc">
+    <img src="assets/images/avatar.png" alt="disc">
+  </div>
+  <div class="music-info">
+    <div class="music-title">背景音乐</div>
+    <div class="music-author">Sakura</div>
+  </div>
+  <div class="music-visualizer">
+    <div class="vis-bar" style="height:4px"></div>
+    <div class="vis-bar" style="height:8px"></div>
+    <div class="vis-bar" style="height:12px"></div>
+    <div class="vis-bar" style="height:6px"></div>
+    <div class="vis-bar" style="height:10px"></div>
+  </div>
+  <div class="music-controls">
+    <button class="music-btn" id="musicPrev" title="上一首">⏮</button>
+    <button class="music-btn play-btn" id="musicPlay" title="播放/暂停">▶</button>
+    <button class="music-btn" id="musicNext" title="下一首">⏭</button>
+  </div>
+  <div class="music-progress" id="musicProgress">
+    <div class="music-progress-track">
+      <div class="music-progress-bar" id="musicProgressBar"></div>
+    </div>
+    <div class="music-progress-time" id="musicProgressTime">0:00</div>
+  </div>
+  <audio id="musicAudio" src="assets/music/bgm.mp3" preload="none"></audio>
+</div>
+
+<!-- Floating pet character -->
+<div class="pet-container" id="petContainer">
+  <div class="pet-bubble" id="petBubble">主人，要聊聊天吗？</div>
+  <img src="assets/images/pet.webp" alt="pet" class="pet-character" id="petCharacter" loading="lazy" decoding="async">
+  <div class="pet-glow"></div>
+</div>
+
+<!-- Pet panel (chat models) -->
+<div class="pet-panel" id="petPanel">
+  <div class="pet-panel-bg"></div>
+  <div class="pet-panel-overlay"></div>
+  <div class="pet-panel-header">
+    <h3>✦ 对话模型导航</h3>
+    <p>点击头像展开 · 一键直达</p>
+  </div>
+  <div class="pet-panel-list" id="petPanelList"></div>
+  <div class="pet-panel-footer">
+    <small>❀ 点击各平台直达官网 ❀</small>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span class="logo-ring"><img src="assets/images/avatar.png" alt="logo"></span>
+      欢迎来到爱的殿堂
+    </div>
+    <div class="topbar-nav">
+      <span>✦ 时崎狂三主题</span>
+      <span>⏳ 约会大作战</span>
+    </div>
+  </div>
+
+  <!-- Banner -->
+  <div class="banner">
+    <div class="banner-img">
+      <img src="assets/images/avatar.png" alt="banner" loading="lazy">
+    </div>
+    <div class="banner-content">
+      <span class="banner-deco">⚙</span>
+      <h2>掌控时间の精灵<br>在此开启<em>诸平台之门扉</em></h2>
+      <p>「刻刻帝」—— 时崎狂三の天使。此处聚合国内外主流 API 开放平台，助你一键跳转，高效开发。</p>
+    </div>
+  </div>
+
+  <!-- Search + Tabs -->
+  <div class="search-row">
+    <div class="search-wrap">
+      <span class="si">⏳</span>
+      <input id="search" type="text" placeholder="检索平台之名..." autocomplete="off">
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+</div>
+
+<div class="lace-border"></div>
+
+<!-- Cards -->
+<div class="container">
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="lace-border"></div>
+
+<div class="gothic-divider">✦ ❀ ✦</div>
+
+<!-- Site stats -->
+<div class="site-stats">
+  <div class="stats-title">✦ 网站运行数据 ✦</div>
+  <div class="stats-grid">
+    <div class="stats-item">
+      <div class="stats-icon">⏳</div>
+      <div class="stats-value" id="statsUptime">0:00:00</div>
+      <div class="stats-label">已运行</div>
+    </div>
+    <div class="stats-item">
+      <div class="stats-icon">👁</div>
+      <div class="stats-value" id="statsVisitors">0</div>
+      <div class="stats-label">今日访问</div>
+    </div>
+    <div class="stats-item">
+      <div class="stats-icon">🖱</div>
+      <div class="stats-value" id="statsClicks">0</div>
+      <div class="stats-label">总点击次数</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <!-- pulse rings -->
+  <div class="footer-pulse"></div>
+  <div class="footer-pulse"></div>
+  <div class="footer-pulse"></div>
+
+  <!-- floating particles -->
+  <div class="footer-particles" id="footerParticles"></div>
+
+  <!-- rising petals -->
+  <div class="footer-petals" id="footerPetals"></div>
+
+  <!-- sparkles -->
+  <div class="footer-sparkles" id="footerSparkles"></div>
+
+  <div class="footer-inner">
+    <div class="footer-label">Made With Love</div>
+    <div class="footer-name">制作 By Sakura</div>
+    <div class="footer-sub">数据仅供参考，请以各平台官网为准</div>
+  </div>
+</div>
+
+<script>
+// ── Async font loading (non-blocking) ──
+(function() {
+  var link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+SC:wght@400;600;700;900&display=swap';
+  link.media = 'print';
+  link.onload = function() { this.media = 'all'; };
+  document.head.appendChild(link);
+})();
+
+// ── Platform data ──
+const platforms = [
+  { name: "百度 AI 开放平台", desc: "涵盖 NLP、语音、图像、大模型等 200+ AI 能力", url: "https://ai.baidu.com", emoji: "🤖", tags: ["国内","AI"] },
+  { name: "阿里云百炼", desc: "通义大模型 API，支持文本生成、多模态理解与 Agent 开发", url: "https://bailian.console.aliyun.com", emoji: "🧠", tags: ["国内","AI","云服务"] },
+  { name: "腾讯混元", desc: "腾讯大语言模型 API，支持对话、创作、代码生成等场景", url: "https://cloud.tencent.com/product/hunyuan", emoji: "🌀", tags: ["国内","AI","云服务"] },
+  { name: "讯飞开放平台", desc: "语音合成/识别、自然语言处理、计算机视觉等 AI 能力", url: "https://www.xfyun.cn", emoji: "🎤", tags: ["国内","AI"] },
+  { name: "智谱 AI 开放平台", desc: "GLM 大模型 API，支持长文本、代码、多轮对话等能力", url: "https://open.bigmodel.cn", emoji: "✨", tags: ["国内","AI"] },
+  { name: "月之暗面 Kimi", desc: "长上下文大模型 API，擅长超长文档理解与多轮推理", url: "https://platform.moonshot.cn", emoji: "🌙", tags: ["国内","AI"] },
+  { name: "DeepSeek 开放平台", desc: "高性价比大模型 API，代码与推理能力突出", url: "https://platform.deepseek.com", emoji: "🔮", tags: ["国内","AI"] },
+  { name: "火山引擎(字节)", desc: "豆包大模型与云原生服务，覆盖 AI、数据、音视频等领域", url: "https://www.volcengine.com", emoji: "🌋", tags: ["国内","AI","云服务"] },
+  { name: "阿里云", desc: "云计算、数据库、存储、CDN、安全等全栈云服务", url: "https://www.aliyun.com", emoji: "☁️", tags: ["国内","云服务"] },
+  { name: "腾讯云", desc: "云服务器、数据库、AI、音视频、CDN 等一站式云服务", url: "https://cloud.tencent.com", emoji: "⛅", tags: ["国内","云服务"] },
+  { name: "华为云", desc: "昇腾 AI、鲲鹏计算、云原生等全场景云服务", url: "https://www.huaweicloud.com", emoji: "🔴", tags: ["国内","云服务"] },
+  { name: "百度智能云", desc: "云计算与 AI 融合，提供云服务器、数据库、AI 平台等", url: "https://cloud.baidu.com", emoji: "🌐", tags: ["国内","云服务","AI"] },
+  { name: "高德开放平台", desc: "地图、定位、导航、搜索等 LBS 服务", url: "https://lbs.amap.com", emoji: "🗺️", tags: ["国内","平台"] },
+  { name: "微信开放平台", desc: "微信登录、分享、支付、小程序等生态能力", url: "https://open.weixin.qq.com", emoji: "💬", tags: ["国内","平台"] },
+  { name: "钉钉开放平台", desc: "企业通讯、审批流、机器人、小程序等办公 API", url: "https://open.dingtalk.com", emoji: "📌", tags: ["国内","平台"] },
+  { name: "支付宝开放平台", desc: "支付、生活号、小程序、芝麻信用等服务", url: "https://open.alipay.com", emoji: "💰", tags: ["国内","平台","支付"] },
+  { name: "飞书开放平台", desc: "即时通讯、文档、日历、审批等协作 API", url: "https://open.feishu.cn", emoji: "🕊️", tags: ["国内","平台"] },
+  { name: "抖音开放平台", desc: "抖音登录、分享、视频发布、直播等能力", url: "https://open.douyin.com", emoji: "🎵", tags: ["国内","平台"] },
+  { name: "OpenAI API", desc: "GPT、DALL·E、Whisper、Embeddings 等 AI 模型", url: "https://platform.openai.com", emoji: "🟢", tags: ["国外","AI"] },
+  { name: "Google Gemini", desc: "Gemini 多模态大模型 API，支持文本、图像、代码", url: "https://ai.google.dev", emoji: "💎", tags: ["国外","AI"] },
+  { name: "Anthropic Claude", desc: "Claude 大模型 API，擅长长文本理解与安全对话", url: "https://console.anthropic.com", emoji: "🦋", tags: ["国外","AI"] },
+  { name: "Mistral AI", desc: "欧洲开源大模型 API，高性能且支持多语言", url: "https://mistral.ai", emoji: "🌬️", tags: ["国外","AI"] },
+  { name: "Google Cloud", desc: "计算、存储、AI、大数据、Kubernetes 等全球云服务", url: "https://cloud.google.com", emoji: "🌤️", tags: ["国外","云服务","AI"] },
+  { name: "AWS", desc: "全球最大的云计算平台，覆盖计算、存储、AI 等", url: "https://aws.amazon.com", emoji: "📦", tags: ["国外","云服务"] },
+  { name: "Microsoft Azure", desc: "云计算、AI、混合云、开发者工具等企业级服务", url: "https://azure.microsoft.com", emoji: "🪟", tags: ["国外","云服务","AI"] },
+  { name: "Firebase", desc: "Google 应用开发平台，实时数据库、认证、托管等", url: "https://firebase.google.com", emoji: "🔥", tags: ["国外","云服务"] },
+  { name: "Vercel", desc: "前端部署与 Serverless 平台，Next.js 官方推荐", url: "https://vercel.com", emoji: "▲", tags: ["国外","云服务"] },
+  { name: "Supabase", desc: "开源 Firebase 替代，PostgreSQL 实时数据库 + 认证", url: "https://supabase.com", emoji: "⚡", tags: ["国外","云服务"] },
+  { name: "GitHub API", desc: "代码仓库、Issues、PR、Actions 等开发协作 API", url: "https://docs.github.com/en/rest", emoji: "🐙", tags: ["国外","平台"] },
+  { name: "Stripe", desc: "全球领先的在线支付 API，支持订阅、发票、风控", url: "https://stripe.com", emoji: "💳", tags: ["国外","支付"] },
+  { name: "PayPal Developer", desc: "全球支付 API，支持在线结账、订阅与跨境收款", url: "https://developer.paypal.com", emoji: "🅿️", tags: ["国外","支付"] },
+  { name: "Twilio", desc: "短信、语音、视频、邮件等通信 API", url: "https://www.twilio.com", emoji: "📞", tags: ["国外","平台"] },
+  { name: "Cloudflare", desc: "CDN、DNS、Workers Serverless、安全防护等", url: "https://www.cloudflare.com", emoji: "🛡️", tags: ["国外","云服务"] },
+  { name: "Notion API", desc: "笔记与知识库 API，支持页面、数据库的读写操作", url: "https://developers.notion.com", emoji: "📝", tags: ["国外","平台"] },
+  { name: "Slack API", desc: "企业通讯 API，支持消息、Bot、工作流自动化", url: "https://api.slack.com", emoji: "💼", tags: ["国外","平台"] },
+];
+
+// ── Chat models data ──
+const chatModels = [
+  { name: "ChatGPT", desc: "OpenAI 旗舰对话模型", url: "https://chat.openai.com", crop: "20% 10%" },
+  { name: "Claude", desc: "Anthropic 安全对话 AI", url: "https://claude.ai", crop: "50% 15%" },
+  { name: "Gemini", desc: "Google 多模态对话", url: "https://gemini.google.com", crop: "80% 20%" },
+  { name: "DeepSeek Chat", desc: "高性价比推理对话", url: "https://chat.deepseek.com", crop: "30% 45%" },
+  { name: "Kimi", desc: "月之暗面长上下文对话", url: "https://kimi.moonshot.cn", crop: "60% 40%" },
+  { name: "通义千问", desc: "阿里大模型对话", url: "https://tongyi.aliyun.com", crop: "15% 65%" },
+  { name: "文心一言", desc: "百度大模型对话", url: "https://yiyan.baidu.com", crop: "45% 60%" },
+  { name: "豆包", desc: "字节跳动对话助手", url: "https://www.doubao.com", crop: "75% 50%" },
+  { name: "讯飞星火", desc: "科大讯飞大模型", url: "https://xinghuo.xfyun.cn", crop: "25% 80%" },
+  { name: "智谱清言", desc: "GLM 对话助手", url: "https://chatglm.cn", crop: "55% 75%" },
+  { name: "腾讯元宝", desc: "腾讯混元对话", url: "https://yuanbao.tencent.com", crop: "85% 55%" },
+  { name: "Perplexity", desc: "AI 搜索问答引擎", url: "https://www.perplexity.ai", crop: "10% 30%" },
+  { name: "Copilot", desc: "微软 AI 助手", url: "https://copilot.microsoft.com", crop: "40% 25%" },
+  { name: "Grok", desc: "xAI 对话模型", url: "https://grok.com", crop: "70% 35%" },
+  { name: "Poe", desc: "Quora 多模型聚合", url: "https://poe.com", crop: "90% 45%" },
+  { name: "Le Chat", desc: "Mistral 欧洲对话", url: "https://chat.mistral.ai", crop: "35% 70%" },
+  { name: "海螺 AI", desc: "MiniMax 对话助手", url: "https://hailuoai.com", crop: "65% 20%" },
+  { name: "阶跃星辰", desc: "跃问大模型对话", url: "https://yuewen.cn", crop: "5% 50%" },
+];
+
+// ── Render pet panel (chat models) ──
+const petPanelList = document.getElementById("petPanelList");
+chatModels.forEach((m) => {
+  const a = document.createElement("a");
+  a.className = "pet-panel-item";
+  a.href = m.url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.innerHTML = `
+    <div class="pet-panel-item-icon"><img src="assets/images/avatar.png" alt="${m.name}" style="object-position:${m.crop}"></div>
+    <div class="pet-panel-item-info">
+      <div class="pet-panel-item-name">${m.name}</div>
+      <div class="pet-panel-item-desc">${m.desc}</div>
+    </div>
+    <span class="pet-panel-item-arrow">→</span>
+  `;
+  petPanelList.appendChild(a);
+});
+
+// ── Pet toggle ──
+const petCharacter = document.getElementById("petCharacter");
+const petPanel = document.getElementById("petPanel");
+const petBackdrop = document.getElementById("petBackdrop");
+const petBubble = document.getElementById("petBubble");
+let petPanelOpen = false;
+let petPanelBgLoaded = false;
+
+function togglePetPanel() {
+  petPanelOpen = !petPanelOpen;
+  if (petPanelOpen) {
+    // lazy-load sidebar background image
+    if (!petPanelBgLoaded) {
+      petPanelBgLoaded = true;
+      const panelBg = petPanel.querySelector('.pet-panel-bg');
+      panelBg.style.backgroundImage = "url('assets/images/sidebar-bg.jpg')";
+    }
+    // position panel near the pet
+    const rect = petContainer.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const panelW = 300;
+    if (rect.left > vw / 2) {
+      // pet on right side → open panel to its left
+      petPanel.style.right = "auto";
+      petPanel.style.left = Math.max(10, rect.left - panelW - 12) + "px";
+    } else {
+      // pet on left side → open panel to its right
+      petPanel.style.left = "auto";
+      petPanel.style.right = Math.max(10, vw - rect.right - panelW - 12) + "px";
+    }
+  }
+  petPanel.classList.toggle("open", petPanelOpen);
+  petBackdrop.classList.toggle("show", petPanelOpen);
+}
+petCharacter.addEventListener("click", togglePetPanel);
+petBackdrop.addEventListener("click", () => { if (petPanelOpen) togglePetPanel(); });
+
+// ── Pet random page movement ──
+const petContainer = document.getElementById("petContainer");
+let petMoving = false;
+
+function movePetRandom() {
+  if (petPanelOpen) return;
+
+  const petW = 140;
+  const petH = 180;
+  const pad = 24;
+  const musicZone = { left: 0, bottom: 0, w: 280, h: 80 };
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const maxX = vw - petW - pad;
+  const maxY = vh - petH - pad;
+
+  let x, y, attempts = 0;
+  do {
+    x = pad + Math.random() * (maxX - pad);
+    y = pad + Math.random() * (maxY - pad);
+    attempts++;
+  } while (
+    attempts < 20 &&
+    x < musicZone.w &&
+    y > vh - musicZone.h - petH
+  );
+
+  petContainer.style.left = x + "px";
+  petContainer.style.top = y + "px";
+  petMoving = true;
+}
+
+// initial position
+petContainer.style.left = (window.innerWidth - 180) + "px";
+petContainer.style.top = (window.innerHeight - 240) + "px";
+
+// move every 8-15 seconds
+function schedulePetMove() {
+  const delay = 8000 + Math.random() * 7000;
+  setTimeout(() => {
+    movePetRandom();
+    schedulePetMove();
+  }, delay);
+}
+schedulePetMove();
+
+// ── Pet speech bubbles ──
+const petPhrases = [
+  "主人，要聊聊天吗？",
+  "今天想用哪个模型呢？",
+  "时间在流动中……",
+  "「刻刻帝」随时待命 ✦",
+  "需要我帮忙找平台吗？",
+  "蔷薇盛开，API 就绪 ❀",
+  "点击我展开面板哦～",
+  "主人今天辛苦了 ♡",
+  "试试 DeepSeek 吧！",
+  "Claude 也很不错呢～",
+];
+let bubbleTimer = null;
+
+function showBubble(text) {
+  petBubble.textContent = text || petPhrases[Math.floor(Math.random() * petPhrases.length)];
+  petBubble.classList.add("show");
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(() => petBubble.classList.remove("show"), 3000);
+}
+
+// show bubble periodically
+setInterval(() => {
+  if (!petPanelOpen) showBubble();
+}, 12000);
+
+// show welcome bubble on load
+setTimeout(() => showBubble("主人，要聊聊天吗？"), 1500);
+
+// hide bubble when panel opens
+petCharacter.addEventListener("click", () => {
+  petBubble.classList.remove("show");
+});
+
+// ── Music player ──
+const musicAudio = document.getElementById("musicAudio");
+const musicPlay = document.getElementById("musicPlay");
+const musicDisc = document.getElementById("musicDisc");
+const musicPlayer = document.getElementById("musicPlayer");
+const musicProgressBar = document.getElementById("musicProgressBar");
+let musicPlaying = false;
+
+musicPlay.addEventListener("click", () => {
+  if (musicPlaying) {
+    musicAudio.pause();
+    musicPlay.textContent = "▶";
+    musicDisc.classList.remove("spinning");
+    musicPlayer.classList.remove("playing");
+  } else {
+    musicAudio.play();
+    musicPlay.textContent = "⏸";
+    musicDisc.classList.add("spinning");
+    musicPlayer.classList.add("playing");
+  }
+  musicPlaying = !musicPlaying;
+});
+
+const musicProgress = document.getElementById("musicProgress");
+const musicProgressTime = document.getElementById("musicProgressTime");
+let isDragging = false;
+
+function formatTime(sec) {
+  if (isNaN(sec)) return "0:00";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+function seekFromEvent(e) {
+  const rect = musicProgress.getBoundingClientRect();
+  let ratio = (e.clientX - rect.left) / rect.width;
+  ratio = Math.max(0, Math.min(1, ratio));
+  if (musicAudio.duration) {
+    musicAudio.currentTime = ratio * musicAudio.duration;
+    musicProgressBar.style.width = (ratio * 100) + "%";
+  }
+}
+
+musicProgress.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  seekFromEvent(e);
+});
+document.addEventListener("mousemove", (e) => {
+  if (isDragging) seekFromEvent(e);
+  // update time tooltip position
+  const rect = musicProgress.getBoundingClientRect();
+  if (e.clientX >= rect.left && e.clientX <= rect.right) {
+    let ratio = (e.clientX - rect.left) / rect.width;
+    ratio = Math.max(0, Math.min(1, ratio));
+    musicProgressTime.style.left = (ratio * 100) + "%";
+    if (musicAudio.duration) {
+      musicProgressTime.textContent = formatTime(ratio * musicAudio.duration);
+    }
+  }
+});
+document.addEventListener("mouseup", () => { isDragging = false; });
+
+// touch support
+musicProgress.addEventListener("touchstart", (e) => {
+  isDragging = true;
+  seekFromEvent(e.touches[0]);
+}, { passive: true });
+document.addEventListener("touchmove", (e) => {
+  if (isDragging) seekFromEvent(e.touches[0]);
+}, { passive: true });
+document.addEventListener("touchend", () => { isDragging = false; });
+
+// update progress on play
+musicAudio.addEventListener("timeupdate", () => {
+  if (musicAudio.duration && !isDragging) {
+    const pct = (musicAudio.currentTime / musicAudio.duration) * 100;
+    musicProgressBar.style.width = pct + "%";
+  }
+});
+
+musicAudio.addEventListener("ended", () => {
+  musicPlaying = false;
+  musicPlay.textContent = "▶";
+  musicDisc.classList.remove("spinning");
+  musicPlayer.classList.remove("playing");
+  musicProgressBar.style.width = "0%";
+});
+
+// ── Site stats ──
+const statsUptime = document.getElementById("statsUptime");
+const statsVisitors = document.getElementById("statsVisitors");
+const statsClicks = document.getElementById("statsClicks");
+
+// uptime
+const startTime = Date.now();
+function updateUptime() {
+  const diff = Math.floor((Date.now() - startTime) / 1000);
+  const h = Math.floor(diff / 3600);
+  const m = Math.floor((diff % 3600) / 60);
+  const s = diff % 60;
+  statsUptime.textContent = h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+}
+setInterval(updateUptime, 1000);
+updateUptime();
+
+// daily visitors (localStorage based, per day)
+const today = new Date().toISOString().slice(0, 10);
+const visitorKey = "sakura_visitors_" + today;
+const sessionKey = "sakura_session_" + today;
+
+let visitors = parseInt(localStorage.getItem(visitorKey)) || 0;
+if (!sessionStorage.getItem(sessionKey)) {
+  visitors++;
+  localStorage.setItem(visitorKey, visitors);
+  sessionStorage.setItem(sessionKey, "1");
+}
+statsVisitors.textContent = visitors;
+
+// clean old days (keep only today)
+for (let i = 0; i < localStorage.length; i++) {
+  const k = localStorage.key(i);
+  if (k && k.startsWith("sakura_visitors_") && k !== visitorKey) {
+    localStorage.removeItem(k);
+    i--;
+  }
+}
+
+// click count
+const clickKey = "sakura_clicks";
+let totalClicks = parseInt(localStorage.getItem(clickKey)) || 0;
+statsClicks.textContent = totalClicks;
+
+document.addEventListener("click", (e) => {
+  // only count meaningful clicks (cards, links, buttons)
+  if (e.target.closest(".card, .tab, .music-btn, .pet-character, .pet-panel-item, .sidebar-item")) {
+    totalClicks++;
+    localStorage.setItem(clickKey, totalClicks);
+    statsClicks.textContent = totalClicks;
+    // brief flash effect
+    statsClicks.style.color = "#fff";
+    setTimeout(() => { statsClicks.style.color = ""; }, 200);
+  }
+});
+
+// ── Footer particles ──
+const fpEl = document.getElementById("footerParticles");
+const fpChars = ["❀","✦","☆","♦","⚙","✿","♡","⋆"];
+const fpColors = ["#c41e3a","#c9a35a","#8b0000","#e8c88a","#d43048","#a81c2e","#f0dbb0","#d07070"];
+for (let i = 0; i < 8; i++) {
+  const d = document.createElement("span");
+  d.className = "footer-particle";
+  d.textContent = fpChars[i % fpChars.length];
+  d.style.left = 10 + Math.random() * 80 + "%";
+  d.style.bottom = "10px";
+  d.style.color = fpColors[i % fpColors.length];
+  d.style.animationDelay = (Math.random() * 6).toFixed(1) + "s";
+  d.style.animationDuration = (3 + Math.random() * 4).toFixed(1) + "s";
+  d.style.fontSize = (8 + Math.random() * 6) + "px";
+  fpEl.appendChild(d);
+}
+
+// footer petals
+const fpPetals = document.getElementById("footerPetals");
+const petalChars = ["❀","✾","✿","❁"];
+for (let i = 0; i < 5; i++) {
+  const p = document.createElement("span");
+  p.className = "footer-petal";
+  p.textContent = petalChars[i % petalChars.length];
+  p.style.left = Math.random() * 100 + "%";
+  p.style.color = ["#c41e3a","#a81c2e","#d43048","#c9a35a"][i % 4];
+  p.style.animationDelay = (Math.random() * 8).toFixed(1) + "s";
+  p.style.animationDuration = (5 + Math.random() * 5).toFixed(1) + "s";
+  p.style.fontSize = (10 + Math.random() * 6) + "px";
+  fpPetals.appendChild(p);
+}
+
+// footer sparkles
+const fpSparkles = document.getElementById("footerSparkles");
+for (let i = 0; i < 6; i++) {
+  const s = document.createElement("div");
+  s.className = "sparkle";
+  s.style.left = Math.random() * 100 + "%";
+  s.style.top = Math.random() * 100 + "%";
+  s.style.animationDelay = (Math.random() * 4).toFixed(1) + "s";
+  s.style.animationDuration = (2 + Math.random() * 3).toFixed(1) + "s";
+  s.style.width = s.style.height = (2 + Math.random() * 2) + "px";
+  s.style.background = i % 2 === 0 ? "var(--gold)" : "var(--crimson)";
+  fpSparkles.appendChild(s);
+}
+
+// ── Rose petals ──
+const rosePetalsEl = document.getElementById("rosePetals");
+const petalTypes = ["❀","✾","✿","❁","✽","🌸"];
+const petalColors = [
+  "#c41e3a","#a81c2e","#d43048","#e05060",
+  "#c9a35a","#b8860b",
+  "#8b0000","#6b1010","#d07070","#e8a0a0"
+];
+const petalCount = 12;
+
+for (let i = 0; i < petalCount; i++) {
+  const p = document.createElement("span");
+  p.className = "rose-petal";
+  p.textContent = petalTypes[i % petalTypes.length];
+  p.style.left = Math.random() * 100 + "%";
+  p.style.color = petalColors[i % petalColors.length];
+  p.style.fontSize = (10 + Math.random() * 14) + "px";
+  p.style.animationDelay = (Math.random() * 18).toFixed(1) + "s";
+  p.style.animationDuration = (10 + Math.random() * 12).toFixed(1) + "s";
+  p.style.filter = `drop-shadow(0 0 ${2 + Math.random() * 3}px rgba(168,28,46,0.2))`;
+  rosePetalsEl.appendChild(p);
+}
+
+// ── Gold particles ──
+const pBg = document.getElementById("particlesBg");
+for (let i = 0; i < 10; i++) {
+  const d = document.createElement("div");
+  d.className = "gold-particle";
+  d.style.left = Math.random() * 100 + "%";
+  d.style.top = 40 + Math.random() * 60 + "%";
+  d.style.animationDelay = (Math.random() * 8).toFixed(1) + "s";
+  d.style.animationDuration = (4 + Math.random() * 5).toFixed(1) + "s";
+  d.style.width = d.style.height = (2 + Math.random() * 2) + "px";
+  pBg.appendChild(d);
+}
+
+// ── Tabs ──
+const allTabs = ["全部","国内","国外","AI","云服务","平台","支付"];
+let activeTab = "全部";
+let searchQuery = "";
+
+const tabsEl = document.getElementById("tabs");
+allTabs.forEach(t => {
+  const btn = document.createElement("button");
+  btn.className = "tab" + (t === "全部" ? " active" : "");
+  btn.textContent = t;
+  btn.onclick = () => {
+    activeTab = t;
+    tabsEl.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.textContent === t));
+    render();
+  };
+  tabsEl.appendChild(btn);
+});
+
+// ── Roman numeral converter ──
+function toRoman(n) {
+  const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  const syms = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+  let r = "";
+  for (let i = 0; i < vals.length; i++) {
+    while (n >= vals[i]) { r += syms[i]; n -= vals[i]; }
+  }
+  return r;
+}
+
+// ── Render ──
+const grid = document.getElementById("grid");
+function render() {
+  const q = searchQuery.toLowerCase();
+  const filtered = platforms.filter(p => {
+    const tabMatch = activeTab === "全部" || p.tags.includes(activeTab);
+    const searchMatch = !q || p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.tags.some(t => t.includes(q));
+    return tabMatch && searchMatch;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty"><span class="empty-emoji">🥀</span><p>时间之流中，未寻得此名……</p></div>`;
+    return;
+  }
+
+  // crop positions for the same avatar image
+  const crops = [
+    "20% 15%","50% 10%","80% 20%","30% 50%","60% 45%",
+    "15% 70%","45% 65%","75% 55%","25% 85%","55% 80%",
+    "10% 35%","40% 30%","70% 40%","85% 60%","35% 75%",
+    "65% 25%","90% 50%","5% 55%","50% 90%","78% 78%"
+  ];
+
+  grid.innerHTML = filtered.map((p, i) => {
+    const delay = Math.min(i * 0.04, 0.4);
+    const particles = ["❀","✦","☆","♦","⚙"];
+    const colors = ["#c41e3a","#c9a35a","#8b0000","#e8c88a","#a81c2e"];
+    const particleHTML = Array.from({length: 5}, (_, j) => {
+      const px = (Math.random() * 100 - 50).toFixed(0);
+      const py = -(25 + Math.random() * 50).toFixed(0);
+      return `<span class="particle" style="left:50%;top:30%;--px:${px}px;--py:${py}px;animation-delay:${j*0.08}s;color:${colors[j]}">${particles[j]}</span>`;
+    }).join("");
+    const crop = crops[i % crops.length];
+    const roman = toRoman(i + 1);
+
+    return `
+    <a class="card" href="${p.url}" target="_blank" rel="noopener noreferrer"
+       style="animation-delay:${delay}s">
+      <span class="card-roman">${roman}</span>
+      <div class="particles">${particleHTML}</div>
+      <div class="card-top">
+        <div class="card-icon"><img src="assets/images/avatar.png" alt="${p.name}" style="object-position:${crop}" loading="lazy" decoding="async"></div>
+        <div class="card-title">${p.name}</div>
+      </div>
+      <div class="card-desc">${p.desc}</div>
+      <div class="card-tags">${p.tags.map(t => `<span class="card-tag" data-tag="${t}">${t}</span>`).join("")}</div>
+      <div class="card-link">${p.url}</div>
+    </a>`;
+  }).join("");
+}
+
+document.getElementById("search").addEventListener("input", e => {
+  searchQuery = e.target.value.trim();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
